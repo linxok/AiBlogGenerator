@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Cache/etc/cache.xsd">
+    <type name="mycompany_ai_blog_generator" translate="label,description" instance="MyCompany\AiBlogGenerator\Model\Cache\Type">
+        <label>AI Blog Generator Cache</label>
+        <description>Cache for OpenRouter models, catalog context, and generated drafts.</description>
+    </type>
+</config>

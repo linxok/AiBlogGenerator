@@ -1,0 +1,14 @@
+.idea/
+.vscode/
+.DS_Store
+*.log
+var/
+generated/
+pub/static/
+pub/media/
+vendor/
+composer.lock
+phpunit.xml
+.phpunit.result.cache
+coverage/
+node_modules/

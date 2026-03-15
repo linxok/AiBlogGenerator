@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <aibloggenerator>
+            <general>
+                <enable>0</enable>
+                <default_model>openai/gpt-4o-mini</default_model>
+                <temperature>0.7</temperature>
+                <max_tokens>2200</max_tokens>
+                <default_word_count>1200</default_word_count>
+                <auto_publish>0</auto_publish>
+            </general>
+            <cron>
+                <cron_enabled>0</cron_enabled>
+                <cron_frequency>daily</cron_frequency>
+                <posts_per_run>1</posts_per_run>
+                <topic_source>manual</topic_source>
+                <target_category_id>0</target_category_id>
+                <target_store_views>0</target_store_views>
+            </cron>
+        </aibloggenerator>
+    </default>
+</config>

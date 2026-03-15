@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="MyCompany_AiBlogGenerator::history" title="AI Blog Generator" module="MyCompany_AiBlogGenerator" sortOrder="95" parent="Mageplaza_Blog::post" action="aibloggenerator/history/index" resource="MyCompany_AiBlogGenerator::history"/>
+    </menu>
+</config>

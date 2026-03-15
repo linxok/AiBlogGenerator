@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="mycompany_ai_blog_generator_generate" instance="MyCompany\AiBlogGenerator\Cron\GeneratePosts" method="execute">
+            <schedule>* * * * *</schedule>
+        </job>
+    </group>
+</config>

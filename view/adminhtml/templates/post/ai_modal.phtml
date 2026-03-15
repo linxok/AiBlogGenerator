@@ -1,0 +1,64 @@
+<div id="mycompany-ai-blog-generator" data-mage-init='{"MyCompany_AiBlogGenerator/js/post-ai-modal": <?= /* @noEscape */ $block->getConfig() ?>}'>
+    <div class="admin__field field">
+        <div class="admin__field-control">
+            <button type="button" class="action-secondary" id="mycompany-ai-open-inline"> <span><?= $block->escapeHtml(__('Generate with AI')) ?></span></button>
+        </div>
+    </div>
+    <div id="mycompany-ai-modal" style="display:none;">
+        <div class="admin__field field required">
+            <label class="admin__field-label" for="mycompany-ai-topic"><span><?= $block->escapeHtml(__('Topic')) ?></span></label>
+            <div class="admin__field-control"><input type="text" id="mycompany-ai-topic" class="admin__control-text"/></div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label" for="mycompany-ai-keywords"><span><?= $block->escapeHtml(__('Keywords')) ?></span></label>
+            <div class="admin__field-control"><input type="text" id="mycompany-ai-keywords" class="admin__control-text"/></div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label" for="mycompany-ai-tone"><span><?= $block->escapeHtml(__('Tone')) ?></span></label>
+            <div class="admin__field-control"><input type="text" id="mycompany-ai-tone" class="admin__control-text" value="professional"/></div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label" for="mycompany-ai-word-count"><span><?= $block->escapeHtml(__('Word count')) ?></span></label>
+            <div class="admin__field-control"><input type="number" id="mycompany-ai-word-count" class="admin__control-text" value="1200"/></div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label" for="mycompany-ai-store-views"><span><?= $block->escapeHtml(__('Store Views')) ?></span></label>
+            <div class="admin__field-control">
+                <select id="mycompany-ai-store-views" class="admin__control-multiselect" multiple="multiple" size="6">
+                    <?php foreach ($block->getStoreOptions() as $group): ?>
+                        <?php if (!empty($group['value']) && is_array($group['value'])): ?>
+                            <optgroup label="<?= $block->escapeHtmlAttr($group['label']) ?>">
+                                <?php foreach ($group['value'] as $store): ?>
+                                    <option value="<?= $block->escapeHtmlAttr($store['value']) ?>"><?= $block->escapeHtml($store['label']) ?></option>
+                                <?php endforeach; ?>
+                            </optgroup>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label" for="mycompany-ai-category"><span><?= $block->escapeHtml(__('Category')) ?></span></label>
+            <div class="admin__field-control">
+                <select id="mycompany-ai-category" class="admin__control-select">
+                    <?php foreach ($block->getCategoryOptions() as $option): ?>
+                        <option value="<?= $block->escapeHtmlAttr($option['value']) ?>"><?= $block->escapeHtml($option['label']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label" for="mycompany-ai-product-search"><span><?= $block->escapeHtml(__('Product')) ?></span></label>
+            <div class="admin__field-control">
+                <input type="text" id="mycompany-ai-product-search" class="admin__control-text" autocomplete="off"/>
+                <input type="hidden" id="mycompany-ai-product-id"/>
+                <div id="mycompany-ai-product-results" class="admin__control-support-text"></div>
+            </div>
+        </div>
+        <div class="admin__field field">
+            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Preview')) ?></span></label>
+            <div class="admin__field-control"><div id="mycompany-ai-preview" style="min-height:200px;border:1px solid #c2c2c2;padding:12px;background:#fff;"></div></div>
+        </div>
+        <input type="hidden" id="mycompany-ai-generated-json"/>
+    </div>
+</div>

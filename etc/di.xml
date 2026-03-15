@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Mageplaza\Blog\Block\Adminhtml\Post\Edit" type="MyCompany\AiBlogGenerator\Block\Adminhtml\Post\Edit"/>
+    <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+        <arguments>
+            <argument name="collections" xsi:type="array">
+                <item name="aibloggenerator_history_listing_data_source" xsi:type="string">MyCompany\AiBlogGenerator\Model\ResourceModel\GenerationHistory\Grid\Collection</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="MyCompany\AiBlogGenerator\Model\ResourceModel\GenerationHistory\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+        <arguments>
+            <argument name="mainTable" xsi:type="string">mycompany_ai_blog_generation</argument>
+            <argument name="resourceModel" xsi:type="string">MyCompany\AiBlogGenerator\Model\ResourceModel\GenerationHistory</argument>
+        </arguments>
+    </virtualType>
+    <type name="MyCompany\AiBlogGenerator\Logger\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">ai_blog_generator</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">MyCompany\AiBlogGenerator\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

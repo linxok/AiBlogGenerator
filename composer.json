@@ -1,0 +1,28 @@
+{
+  "name": "mycompany/module-ai-blog-generator",
+  "description": "AI blog generation for Mageplaza Blog via OpenRouter",
+  "type": "magento2-module",
+  "version": "1.0.0",
+  "require": {
+    "php": "^8.2",
+    "magento/framework": "^103.0",
+    "mageplaza/magento-2-blog-extension": "^4.3"
+  },
+  "license": [
+    "proprietary"
+  ],
+  "autoload-dev": {
+    "psr-4": {
+      "MyCompany\\AiBlogGenerator\\Test\\": "Test/"
+    }
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "MyCompany\\AiBlogGenerator\\": ""
+    }
+  },
+  "minimum-stability": "stable"
+}

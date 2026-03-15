@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<acl xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <resources>
+        <resource id="Magento_Backend::admin">
+            <resource id="Mageplaza_Blog::post">
+                <resource id="MyCompany_AiBlogGenerator::generate" title="AI Blog Generator" sortOrder="900">
+                    <resource id="MyCompany_AiBlogGenerator::config" title="Configuration" sortOrder="10"/>
+                    <resource id="MyCompany_AiBlogGenerator::history" title="Generation History" sortOrder="20"/>
+                </resource>
+            </resource>
+        </resource>
+    </resources>
+</acl>

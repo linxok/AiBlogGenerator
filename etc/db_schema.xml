@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="mycompany_ai_blog_generation" resource="default" engine="innodb" comment="AI Blog Generation History">
+        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Entity ID"/>
+        <column xsi:type="varchar" name="topic" nullable="false" length="255" comment="Topic"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="32" comment="Status"/>
+        <column xsi:type="timestamp" name="generated_at" nullable="true" default="CURRENT_TIMESTAMP" on_update="false" comment="Generated At"/>
+        <column xsi:type="varchar" name="model" nullable="true" length="255" comment="Model"/>
+        <column xsi:type="int" name="store_id" unsigned="true" nullable="false" default="0" comment="Store ID"/>
+        <column xsi:type="int" name="post_id" unsigned="true" nullable="true" comment="Mageplaza Post ID"/>
+        <column xsi:type="int" name="category_id" unsigned="true" nullable="true" comment="Magento Category ID"/>
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="true" comment="Magento Product ID"/>
+        <column xsi:type="varchar" name="keywords" nullable="true" length="255" comment="Keywords"/>
+        <column xsi:type="varchar" name="tone" nullable="true" length="64" comment="Tone"/>
+        <column xsi:type="text" name="request_payload" nullable="true" comment="Request Payload"/>
+        <column xsi:type="mediumtext" name="response_payload" nullable="true" comment="Response Payload"/>
+        <column xsi:type="mediumtext" name="preview_html" nullable="true" comment="Preview HTML"/>
+        <column xsi:type="smallint" name="is_published" nullable="false" default="0" comment="Is Published"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+        <index referenceId="MYCOMPANY_AI_BLOG_GENERATION_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+        <index referenceId="MYCOMPANY_AI_BLOG_GENERATION_STORE_ID" indexType="btree">
+            <column name="store_id"/>
+        </index>
+        <index referenceId="MYCOMPANY_AI_BLOG_GENERATION_POST_ID" indexType="btree">
+            <column name="post_id"/>
+        </index>
+    </table>
+</schema>

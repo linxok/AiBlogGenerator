@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">aibloggenerator_history_listing.aibloggenerator_history_listing_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>aibloggenerator_history_columns</spinner>
+        <deps>
+            <dep>aibloggenerator_history_listing.aibloggenerator_history_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="aibloggenerator_history_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">entity_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>MyCompany_AiBlogGenerator::history</aclResource>
+        <dataProvider class="Magento\Framework\View\Element\UiComponent\DataProvider\DataProvider" name="aibloggenerator_history_listing_data_source">
+            <settings>
+                <requestFieldName>id</requestFieldName>
+                <primaryFieldName>entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <columns name="aibloggenerator_history_columns">
+        <column name="entity_id"><settings><filter>textRange</filter><label>ID</label></settings></column>
+        <column name="topic"><settings><filter>text</filter><label>Topic</label></settings></column>
+        <column name="status"><settings><filter>select</filter><label>Status</label></settings></column>
+        <column name="model"><settings><filter>text</filter><label>Model</label></settings></column>
+        <column name="store_id"><settings><filter>textRange</filter><label>Store View</label></settings></column>
+        <column name="post_id"><settings><filter>textRange</filter><label>Post ID</label></settings></column>
+        <column name="generated_at" class="Magento\Ui\Component\Listing\Columns\Date"><settings><filter>dateRange</filter><label>Generated At</label></settings></column>
+    </columns>
+</listing>
