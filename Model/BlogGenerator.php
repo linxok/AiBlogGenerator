@@ -13,6 +13,7 @@ class BlogGenerator
     public function __construct(
         private readonly OpenRouterClient $openRouterClient,
         private readonly RagCatalogProvider $ragCatalogProvider,
+        private readonly ProductSelectionResolver $productSelectionResolver,
         private readonly StoreManagerInterface $storeManager,
         private readonly Data $helper,
         private readonly Json $json,
@@ -28,11 +29,14 @@ class BlogGenerator
         $language = $this->detectLanguageFromLocale($locale);
         $wordCount = (int) ($payload['word_count'] ?? $this->helper->getDefaultWordCount($storeId));
         $resolvedModel = $this->helper->getDefaultModel($storeId);
-        $context = $this->ragCatalogProvider->getContext(
-            !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
-            !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
-            $storeId
-        );
+        $productIds = $this->productSelectionResolver->resolveProductIds($payload, $storeId);
+        $context = $productIds
+            ? $this->ragCatalogProvider->getProductsContext($productIds, $storeId)
+            : $this->ragCatalogProvider->getContext(
+                !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
+                !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
+                $storeId
+            );
 
         $messages = [
             [
@@ -89,6 +93,10 @@ class BlogGenerator
             'Include tags as an array of short SEO tags.',
             'faq must be an array of question/answer pairs.',
             'If context is provided, use it accurately and do not invent product or category facts.',
+            'If CONTEXT contains multiple products, compare and reference only those products.',
+            'Use only exact product or category URLs provided in CONTEXT when inserting links.',
+            'Never invent, rewrite, guess, translate, or shorten URLs.',
+            'If no exact URL is present in CONTEXT, do not add a direct product or category link.',
             'Also include internal linking suggestions naturally in content_html.',
             'CONTEXT: ' . $this->json->serialize($context),
         ];

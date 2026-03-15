@@ -41,8 +41,22 @@ class MageplazaPostManager
             $post->setCategoriesIds(array_map('intval', (array) $payload['blog_category_ids']));
         }
 
-        if (!empty($payload['product_id'])) {
-            $post->setProductsData([(int) $payload['product_id'] => ['position' => 0]]);
+        $productIds = !empty($payload['product_ids']) ? (array) $payload['product_ids'] : [];
+        if (!$productIds && !empty($payload['product_id'])) {
+            $productIds = [(int) $payload['product_id']];
+        }
+
+        if ($productIds) {
+            $productsData = [];
+            foreach (array_values(array_unique(array_map('intval', $productIds))) as $position => $productId) {
+                if ($productId > 0) {
+                    $productsData[$productId] = ['position' => $position];
+                }
+            }
+
+            if ($productsData) {
+                $post->setProductsData($productsData);
+            }
         }
 
         try {

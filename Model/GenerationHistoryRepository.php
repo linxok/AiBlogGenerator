@@ -37,7 +37,9 @@ class GenerationHistoryRepository
             'model' => (string) ($requestPayload['model'] ?? ''),
             'store_id' => (int) ($requestPayload['store_id'] ?? 0),
             'category_id' => !empty($requestPayload['category_id']) ? (int) $requestPayload['category_id'] : null,
-            'product_id' => !empty($requestPayload['product_id']) ? (int) $requestPayload['product_id'] : null,
+            'product_id' => !empty($requestPayload['product_id'])
+                ? (int) $requestPayload['product_id']
+                : (!empty($requestPayload['product_ids'][0]) ? (int) $requestPayload['product_ids'][0] : null),
             'keywords' => (string) ($requestPayload['keywords'] ?? ''),
             'tone' => (string) ($requestPayload['tone'] ?? ''),
             'request_payload' => $this->json->serialize($requestPayload),

@@ -9,6 +9,7 @@ use MyCompany\AiBlogGenerator\Controller\Adminhtml\AbstractGenerate;
 use MyCompany\AiBlogGenerator\Model\BlogGenerator;
 use MyCompany\AiBlogGenerator\Model\GenerationHistoryRepository;
 use MyCompany\AiBlogGenerator\Model\MageplazaPostManager;
+use MyCompany\AiBlogGenerator\Model\ProductSelectionResolver;
 
 class Save extends AbstractGenerate
 {
@@ -18,7 +19,8 @@ class Save extends AbstractGenerate
         private readonly BlogGenerator $blogGenerator,
         private readonly MageplazaPostManager $postManager,
         private readonly GenerationHistoryRepository $historyRepository,
-        private readonly Json $json
+        private readonly Json $json,
+        private readonly ProductSelectionResolver $productSelectionResolver
     ) {
         parent::__construct($context);
     }
@@ -28,6 +30,8 @@ class Save extends AbstractGenerate
         $result = $this->resultJsonFactory->create();
         try {
             $payload = $this->getRequest()->getParams();
+            $storeId = (int) ($payload['store_id'] ?? 0);
+            $productIds = $this->productSelectionResolver->resolveProductIds($payload, $storeId);
             $generated = !empty($payload['generated_json'])
                 ? $this->json->unserialize((string) $payload['generated_json'])
                 : $this->blogGenerator->generate($payload);
@@ -36,9 +40,10 @@ class Save extends AbstractGenerate
                 $generated,
                 [
                     'author_id' => $this->_auth->getUser()->getId(),
-                    'store_id' => (int) ($payload['store_id'] ?? 0),
-                    'store_ids' => isset($payload['store_ids']) ? (array) $payload['store_ids'] : [(int) ($payload['store_id'] ?? 0)],
-                    'product_id' => !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
+                    'store_id' => $storeId,
+                    'store_ids' => isset($payload['store_ids']) ? (array) $payload['store_ids'] : [$storeId],
+                    'product_id' => $productIds[0] ?? (!empty($payload['product_id']) ? (int) $payload['product_id'] : null),
+                    'product_ids' => $productIds,
                     'blog_category_ids' => !empty($payload['blog_category_ids']) ? (array) $payload['blog_category_ids'] : [],
                     'auto_publish' => !empty($payload['auto_publish']) ? 1 : 0,
                 ],
@@ -49,10 +54,10 @@ class Save extends AbstractGenerate
                 'topic' => (string) ($payload['topic'] ?? $generated['title'] ?? ''),
                 'status' => 'saved',
                 'model' => (string) ($generated['model'] ?? ''),
-                'store_id' => (int) ($payload['store_id'] ?? 0),
+                'store_id' => $storeId,
                 'post_id' => $postId,
                 'category_id' => !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
-                'product_id' => !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
+                'product_id' => $productIds[0] ?? (!empty($payload['product_id']) ? (int) $payload['product_id'] : null),
                 'keywords' => (string) ($payload['keywords'] ?? ''),
                 'tone' => (string) ($payload['tone'] ?? ''),
                 'request_payload' => $this->json->serialize($payload),

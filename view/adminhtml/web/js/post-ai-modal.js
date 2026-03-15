@@ -47,6 +47,7 @@ define([
                 store_ids: storeViews,
                 category_id: $('#mycompany-ai-category').val(),
                 product_id: $('#mycompany-ai-product-id').val(),
+                product_skus: $('#mycompany-ai-product-search').val(),
                 post_id: $('[name="post_id"]').val() || $('[name="id"]').val() || '',
                 form_key: window.FORM_KEY,
                 auto_publish: config.autoPublish ? 1 : 0
@@ -116,14 +117,20 @@ define([
         function bindProductSearch() {
             $('#mycompany-ai-product-search').on('keyup', function () {
                 var value = $(this).val();
+                $('#mycompany-ai-product-id').val('');
+                if (value.indexOf(',') !== -1) {
+                    $('#mycompany-ai-product-results').empty();
+                    return;
+                }
                 if (value.length < 2) {
+                    $('#mycompany-ai-product-results').empty();
                     return;
                 }
                 $.get(config.productSearchUrl, {q: value}).done(function (response) {
                     var html = '';
                     if (response.success && response.items) {
                         $.each(response.items, function (index, item) {
-                            html += '<div><a href="#" class="mycompany-ai-product-option" data-id="' + item.id + '">' + item.label + '</a></div>';
+                            html += '<div><a href="#" class="mycompany-ai-product-option" data-id="' + item.id + '" data-sku="' + item.sku + '">' + item.label + '</a></div>';
                         });
                     }
                     $('#mycompany-ai-product-results').html(html);
@@ -133,7 +140,7 @@ define([
             $(document).on('click', '.mycompany-ai-product-option', function (event) {
                 event.preventDefault();
                 $('#mycompany-ai-product-id').val($(this).data('id'));
-                $('#mycompany-ai-product-search').val($(this).text());
+                $('#mycompany-ai-product-search').val($(this).data('sku'));
                 $('#mycompany-ai-product-results').empty();
             });
         }

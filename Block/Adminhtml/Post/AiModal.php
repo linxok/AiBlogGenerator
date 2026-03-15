@@ -33,16 +33,21 @@ class AiModal extends Template
     {
         $options = [['value' => '', 'label' => __('-- None --')]];
         $collection = $this->categoryCollectionFactory->create();
-        $collection->addAttributeToSelect('name');
+        $collection->addAttributeToSelect(['name', 'level', 'path']);
         $collection->addIsActiveFilter();
+        $collection->addFieldToFilter('level', ['gteq' => 2]);
+        $collection->addOrderField('path');
 
         foreach ($collection as $category) {
             if (!$category->getId()) {
                 continue;
             }
+
+            $level = max(0, (int) $category->getLevel() - 2);
+            $prefix = $level > 0 ? str_repeat('— ', $level) : '';
             $options[] = [
                 'value' => (string) $category->getId(),
-                'label' => (string) $category->getName(),
+                'label' => $prefix . (string) $category->getName(),
             ];
         }
 

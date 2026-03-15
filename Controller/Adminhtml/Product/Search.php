@@ -34,6 +34,7 @@ class Search extends AbstractGenerate
             foreach ($collection as $product) {
                 $items[] = [
                     'id' => (int) $product->getId(),
+                    'sku' => (string) $product->getSku(),
                     'label' => sprintf('%s (%s)', (string) $product->getName(), (string) $product->getSku()),
                 ];
             }

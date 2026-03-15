@@ -36,6 +36,37 @@ class RagCatalogProvider
         return [];
     }
 
+    public function getProductsContext(array $productIds, int $storeId): array
+    {
+        $productIds = array_values(array_unique(array_filter(array_map('intval', $productIds))));
+        if (!$productIds) {
+            return [];
+        }
+
+        if (count($productIds) === 1) {
+            return $this->getProductContext((int) $productIds[0], $storeId);
+        }
+
+        $items = [];
+        foreach ($productIds as $productId) {
+            try {
+                $items[] = $this->getProductContext((int) $productId, $storeId);
+            } catch (NoSuchEntityException) {
+                continue;
+            }
+        }
+
+        if (!$items) {
+            return [];
+        }
+
+        return [
+            'type' => 'products',
+            'count' => count($items),
+            'items' => $items,
+        ];
+    }
+
     public function getProductContext(int $productId, int $storeId): array
     {
         $cacheKey = sprintf('mycompany_ai_blog_product_%d_%d', $productId, $storeId);
