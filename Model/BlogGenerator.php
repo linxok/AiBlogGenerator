@@ -198,11 +198,52 @@ class BlogGenerator
             $decoded = $this->json->unserialize($normalized);
             return is_array($decoded) ? $decoded : [];
         } catch (\InvalidArgumentException $exception) {
+            $sanitized = $this->sanitizeJsonContent($normalized);
+
+            if ($sanitized !== $normalized) {
+                try {
+                    $decoded = $this->json->unserialize($sanitized);
+                    if (is_array($decoded)) {
+                        $this->logger->warning('AI JSON response required control-character sanitization before decode', [
+                            'original_preview' => substr($normalized, 0, 500),
+                            'sanitized_preview' => substr($sanitized, 0, 500),
+                            'message' => $exception->getMessage(),
+                        ]);
+
+                        return $decoded;
+                    }
+                } catch (\InvalidArgumentException $sanitizedException) {
+                    $this->logger->error('Unable to decode sanitized AI JSON response', [
+                        'preview' => substr($sanitized, 0, 500),
+                        'message' => $sanitizedException->getMessage(),
+                    ]);
+                }
+            }
+
             $this->logger->error('Unable to decode AI JSON response', [
                 'preview' => substr($normalized, 0, 500),
                 'message' => $exception->getMessage(),
             ]);
             throw new LocalizedException(__('The AI response was not valid JSON.'));
         }
+    }
+
+    private function sanitizeJsonContent(string $content): string
+    {
+        return (string) preg_replace_callback(
+            '/"((?:\\\\.|[^"\\\\])*)"/s',
+            static function (array $matches): string {
+                $value = $matches[1] ?? '';
+                $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? $value;
+                $value = str_replace(
+                    ["\r\n", "\r", "\n", "\t"],
+                    ['\\n', '\\n', '\\n', '\\t'],
+                    $value
+                );
+
+                return '"' . $value . '"';
+            },
+            $content
+        );
     }
 }
