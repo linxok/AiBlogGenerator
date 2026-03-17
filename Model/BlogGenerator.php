@@ -189,6 +189,7 @@ class BlogGenerator
     private function decodeJsonContent(string $content): array
     {
         $normalized = trim($content);
+        $normalized = preg_replace('/^\xEF\xBB\xBF/', '', $normalized) ?? $normalized;
 
         if (preg_match('/```(?:json)?\s*(.*?)\s*```/is', $normalized, $matches)) {
             $normalized = trim((string) ($matches[1] ?? $normalized));
@@ -250,7 +251,7 @@ class BlogGenerator
 
     private function sanitizeJsonContent(string $content): string
     {
-        return (string) preg_replace_callback(
+        $sanitized = preg_replace_callback(
             '/"((?:\\\\.|[^"\\\\])*)"/s',
             static function (array $matches): string {
                 $value = $matches[1] ?? '';
@@ -265,6 +266,12 @@ class BlogGenerator
             },
             $content
         );
+
+        if (!is_string($sanitized) || $sanitized === '') {
+            return $content;
+        }
+
+        return $sanitized;
     }
 
     private function extractJsonObject(string $content): ?string
