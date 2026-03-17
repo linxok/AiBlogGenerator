@@ -2,6 +2,7 @@
 
 namespace MyCompany\AiBlogGenerator\Helper;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -66,22 +67,22 @@ class Data extends AbstractHelper
 
     public function isCronEnabled(): bool
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_CRON . 'cron_enabled', ScopeInterface::SCOPE_DEFAULT);
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_CRON . 'cron_enabled', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
     }
 
     public function getCronFrequency(): string
     {
-        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'cron_frequency', ScopeInterface::SCOPE_DEFAULT);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'cron_frequency', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
     }
 
     public function getPostsPerRun(): int
     {
-        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'posts_per_run', ScopeInterface::SCOPE_DEFAULT));
+        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'posts_per_run', ScopeConfigInterface::SCOPE_TYPE_DEFAULT));
     }
 
     public function getTopicSource(): string
     {
-        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeInterface::SCOPE_DEFAULT);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
     }
 
     public function getTargetCategoryId(?int $storeId = null): int
@@ -121,7 +122,7 @@ class Data extends AbstractHelper
 
     public function getTargetStoreViews(): array
     {
-        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_store_views', ScopeInterface::SCOPE_DEFAULT);
+        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_store_views', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         if ($value === '') {
             return [];
         }
