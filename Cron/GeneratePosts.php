@@ -60,64 +60,59 @@ class GeneratePosts
         $count = 0;
         $errors = 0;
         foreach ($storeIds as $storeId) {
-            foreach ($this->buildQueueForStore($storeId) as $payload) {
-                if ($count >= $this->helper->getPostsPerRun()) {
-                    return [
-                        'processed' => $count,
-                        'errors' => $errors,
-                        'message' => __('Generated %1 post(s).', $count)->render(),
-                    ];
-                }
+            $payload = $this->buildQueueForStore($storeId);
+            if ($payload === null) {
+                continue;
+            }
 
-                if ($this->helper->isSkipDuplicatesEnabled($storeId) && $this->isDuplicatePayload($payload, $storeId)) {
-                    $this->historyRepository->create([
-                        'topic' => (string) ($payload['topic'] ?? ''),
-                        'status' => 'cron_skipped_duplicate',
-                        'model' => (string) ($payload['model'] ?? ''),
-                        'store_id' => $storeId,
-                        'category_id' => !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
-                        'product_id' => !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
-                        'keywords' => (string) ($payload['keywords'] ?? ''),
-                        'tone' => (string) ($payload['tone'] ?? ''),
-                        'request_payload' => json_encode($payload),
-                        'response_payload' => null,
-                        'preview_html' => null,
-                        'is_published' => 0,
-                    ]);
-                    continue;
-                }
+            if ($this->helper->isSkipDuplicatesEnabled($storeId) && $this->isDuplicatePayload($payload, $storeId)) {
+                $this->historyRepository->create([
+                    'topic' => (string) ($payload['topic'] ?? ''),
+                    'status' => 'cron_skipped_duplicate',
+                    'model' => (string) ($payload['model'] ?? ''),
+                    'store_id' => $storeId,
+                    'category_id' => !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
+                    'product_id' => !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
+                    'keywords' => (string) ($payload['keywords'] ?? ''),
+                    'tone' => (string) ($payload['tone'] ?? ''),
+                    'request_payload' => json_encode($payload),
+                    'response_payload' => null,
+                    'preview_html' => null,
+                    'is_published' => 0,
+                ]);
+                continue;
+            }
 
-                try {
-                    $generated = $this->blogGenerator->generate($payload);
-                    $postId = $this->postManager->saveGeneratedPost($generated, [
-                        'author_id' => $this->helper->getCronAuthorId($storeId),
-                        'store_id' => $storeId,
-                        'store_ids' => [$storeId],
-                        'product_id' => $payload['product_id'] ?? null,
-                        'blog_category_ids' => $this->helper->getCronBlogCategoryIds($storeId),
-                        'auto_publish' => (int) $this->helper->isAutoPublish($storeId),
-                    ]);
+            try {
+                $generated = $this->blogGenerator->generate($payload);
+                $postId = $this->postManager->saveGeneratedPost($generated, [
+                    'author_id' => $this->helper->getCronAuthorId($storeId),
+                    'store_id' => $storeId,
+                    'store_ids' => [$storeId],
+                    'product_id' => $payload['product_id'] ?? null,
+                    'blog_category_ids' => $this->helper->getCronBlogCategoryIds($storeId),
+                    'auto_publish' => (int) $this->helper->isAutoPublish($storeId),
+                ]);
 
-                    $this->historyRepository->create([
-                        'topic' => (string) ($payload['topic'] ?? ''),
-                        'status' => 'cron_saved',
-                        'model' => (string) ($payload['model'] ?? ''),
-                        'store_id' => $storeId,
-                        'post_id' => $postId,
-                        'category_id' => !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
-                        'product_id' => !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
-                        'keywords' => (string) ($payload['keywords'] ?? ''),
-                        'tone' => (string) ($payload['tone'] ?? ''),
-                        'request_payload' => json_encode($payload),
-                        'response_payload' => json_encode($generated),
-                        'preview_html' => (string) ($generated['content_html'] ?? ''),
-                        'is_published' => (int) $this->helper->isAutoPublish($storeId),
-                    ]);
-                    $count++;
-                } catch (\Throwable $exception) {
-                    $errors++;
-                    $this->logger->error('Cron generation failed', ['message' => $exception->getMessage(), 'store_id' => $storeId]);
-                }
+                $this->historyRepository->create([
+                    'topic' => (string) ($payload['topic'] ?? ''),
+                    'status' => 'cron_saved',
+                    'model' => (string) ($payload['model'] ?? ''),
+                    'store_id' => $storeId,
+                    'post_id' => $postId,
+                    'category_id' => !empty($payload['category_id']) ? (int) $payload['category_id'] : null,
+                    'product_id' => !empty($payload['product_id']) ? (int) $payload['product_id'] : null,
+                    'keywords' => (string) ($payload['keywords'] ?? ''),
+                    'tone' => (string) ($payload['tone'] ?? ''),
+                    'request_payload' => json_encode($payload),
+                    'response_payload' => json_encode($generated),
+                    'preview_html' => (string) ($generated['content_html'] ?? ''),
+                    'is_published' => (int) $this->helper->isAutoPublish($storeId),
+                ]);
+                $count++;
+            } catch (\Throwable $exception) {
+                $errors++;
+                $this->logger->error('Cron generation failed', ['message' => $exception->getMessage(), 'store_id' => $storeId]);
             }
         }
 
@@ -154,32 +149,32 @@ class GeneratePosts
         return (time() - $generatedAt) >= $requiredSeconds;
     }
 
-    private function buildQueueForStore(int $storeId): array
+    private function buildQueueForStore(int $storeId): ?array
     {
         $topicSource = $this->helper->getTopicSource();
         if ($topicSource === 'new_products') {
-            $queue = [];
             $collection = $this->productCollectionFactory->create();
             $collection->setStoreId($storeId);
             $collection->addStoreFilter($storeId);
             $collection->addAttributeToSelect(['name']);
-            $collection->setPageSize($this->helper->getPostsPerRun());
+            $collection->setPageSize(1);
             $collection->setOrder('created_at', 'DESC');
 
-            foreach ($collection as $product) {
-                $queue[] = [
-                    'topic' => (string) __('Why %1 is worth attention', $product->getName()),
-                    'keywords' => (string) $product->getName(),
-                    'tone' => $this->resolveTone($storeId, 'professional'),
-                    'word_count' => $this->helper->getDefaultWordCount($storeId),
-                    'store_id' => $storeId,
-                    'product_id' => (int) $product->getId(),
-                    'category_id' => null,
-                    'model' => $this->helper->getDefaultModel($storeId),
-                ];
+            $product = $collection->getFirstItem();
+            if (!$product || !$product->getId()) {
+                return null;
             }
 
-            return $queue;
+            return [
+                'topic' => (string) __('Why %1 is worth attention', $product->getName()),
+                'keywords' => (string) $product->getName(),
+                'tone' => $this->resolveTone($storeId, 'professional'),
+                'word_count' => $this->helper->getDefaultWordCount($storeId),
+                'store_id' => $storeId,
+                'product_id' => (int) $product->getId(),
+                'category_id' => null,
+                'model' => $this->helper->getDefaultModel($storeId),
+            ];
         }
 
         $targetCategoryIds = $this->helper->getTargetCategoryIds($storeId);
@@ -188,7 +183,7 @@ class GeneratePosts
             $category = $this->categoryFactory->create()->load($selectedCategoryId);
             $categoryName = (string) $category->getName();
 
-            return [[
+            return [
                 'topic' => $categoryName !== '' ? (string) __('How to choose %1', $categoryName) : 'Category buying guide',
                 'keywords' => $categoryName !== '' ? $categoryName . ', category guide' : 'category guide',
                 'tone' => $this->resolveTone($storeId, 'expert'),
@@ -196,17 +191,17 @@ class GeneratePosts
                 'store_id' => $storeId,
                 'category_id' => (int) $selectedCategoryId,
                 'model' => $this->helper->getDefaultModel($storeId),
-            ]];
+            ];
         }
 
-        return [[
+        return [
             'topic' => 'Seasonal ecommerce trends',
             'keywords' => 'ecommerce trends, buying guide',
             'tone' => $this->resolveTone($storeId, 'professional'),
             'word_count' => $this->helper->getDefaultWordCount($storeId),
             'store_id' => $storeId,
             'model' => $this->helper->getDefaultModel($storeId),
-        ]];
+        ];
     }
 
     private function resolveTone(int $storeId, string $default): string

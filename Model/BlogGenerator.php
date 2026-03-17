@@ -194,11 +194,21 @@ class BlogGenerator
             $normalized = trim((string) ($matches[1] ?? $normalized));
         }
 
+        $extractedJson = $this->extractJsonObject($normalized);
+        if ($extractedJson !== null) {
+            $normalized = $extractedJson;
+        }
+
         try {
             $decoded = $this->json->unserialize($normalized);
             return is_array($decoded) ? $decoded : [];
         } catch (\InvalidArgumentException $exception) {
             $sanitized = $this->sanitizeJsonContent($normalized);
+
+            $sanitizedExtractedJson = $this->extractJsonObject($sanitized);
+            if ($sanitizedExtractedJson !== null) {
+                $sanitized = $sanitizedExtractedJson;
+            }
 
             if ($sanitized !== $normalized) {
                 try {
@@ -218,6 +228,16 @@ class BlogGenerator
                         'message' => $sanitizedException->getMessage(),
                     ]);
                 }
+            }
+
+            if ($this->looksLikeTruncatedJson($sanitized) || $this->looksLikeTruncatedJson($normalized)) {
+                $this->logger->error('AI JSON response appears truncated', [
+                    'preview' => substr($normalized, 0, 500),
+                    'sanitized_preview' => substr($sanitized, 0, 500),
+                    'message' => $exception->getMessage(),
+                ]);
+
+                throw new LocalizedException(__('The AI response appears truncated. Increase Max Tokens or use a model that returns strict JSON reliably.'));
             }
 
             $this->logger->error('Unable to decode AI JSON response', [
@@ -245,5 +265,102 @@ class BlogGenerator
             },
             $content
         );
+    }
+
+    private function extractJsonObject(string $content): ?string
+    {
+        $start = strpos($content, '{');
+        if ($start === false) {
+            return null;
+        }
+
+        $length = strlen($content);
+        $depth = 0;
+        $inString = false;
+        $escaped = false;
+
+        for ($index = $start; $index < $length; $index++) {
+            $char = $content[$index];
+
+            if ($escaped) {
+                $escaped = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $escaped = true;
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = !$inString;
+                continue;
+            }
+
+            if ($inString) {
+                continue;
+            }
+
+            if ($char === '{') {
+                $depth++;
+                continue;
+            }
+
+            if ($char === '}') {
+                $depth--;
+                if ($depth === 0) {
+                    return substr($content, $start, $index - $start + 1);
+                }
+            }
+        }
+
+        return trim(substr($content, $start));
+    }
+
+    private function looksLikeTruncatedJson(string $content): bool
+    {
+        $trimmed = trim($content);
+        if ($trimmed === '' || strpos($trimmed, '{') === false) {
+            return false;
+        }
+
+        $length = strlen($trimmed);
+        $depth = 0;
+        $inString = false;
+        $escaped = false;
+
+        for ($index = 0; $index < $length; $index++) {
+            $char = $trimmed[$index];
+
+            if ($escaped) {
+                $escaped = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $escaped = true;
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = !$inString;
+                continue;
+            }
+
+            if ($inString) {
+                continue;
+            }
+
+            if ($char === '{') {
+                $depth++;
+                continue;
+            }
+
+            if ($char === '}') {
+                $depth--;
+            }
+        }
+
+        return $depth > 0 || $inString;
     }
 }
