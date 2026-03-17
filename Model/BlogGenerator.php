@@ -80,7 +80,7 @@ class BlogGenerator
     private function buildUserPrompt(array $payload, string $language, string $locale, int $wordCount, array $context): string
     {
         $instructions = [
-            'Generate a blog post for Mageplaza Blog.',
+            'Generate a blog post for this ecommerce store blog.',
             'Language: ' . $language,
             'Locale: ' . $locale,
             'Topic: ' . (string) ($payload['topic'] ?? ''),

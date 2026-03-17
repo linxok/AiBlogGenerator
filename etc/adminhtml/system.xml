@@ -79,6 +79,7 @@
                 </field>
                 <field id="tone" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Default Tone</label>
+                    <comment>Example values: professional, expert, friendly, conversational, persuasive.</comment>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>
