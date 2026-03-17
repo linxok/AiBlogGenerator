@@ -84,29 +84,29 @@ class Data extends AbstractHelper
         return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeInterface::SCOPE_DEFAULT);
     }
 
-    public function getTargetCategoryId(): int
+    public function getTargetCategoryId(?int $storeId = null): int
     {
-        return (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_category_id', ScopeInterface::SCOPE_DEFAULT);
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_category_id', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
-    public function getCronTone(): string
+    public function getCronTone(?int $storeId = null): string
     {
-        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'tone', ScopeInterface::SCOPE_DEFAULT);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'tone', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
-    public function getCronTopicTemplate(): string
+    public function getCronTopicTemplate(?int $storeId = null): string
     {
-        return trim((string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_template', ScopeInterface::SCOPE_DEFAULT));
+        return trim((string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_template', ScopeInterface::SCOPE_STORE, $storeId));
     }
 
-    public function getCronAuthorId(): int
+    public function getCronAuthorId(?int $storeId = null): int
     {
-        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'author_id', ScopeInterface::SCOPE_DEFAULT));
+        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'author_id', ScopeInterface::SCOPE_STORE, $storeId));
     }
 
-    public function getCronBlogCategoryIds(): array
+    public function getCronBlogCategoryIds(?int $storeId = null): array
     {
-        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'blog_category_ids', ScopeInterface::SCOPE_DEFAULT);
+        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'blog_category_ids', ScopeInterface::SCOPE_STORE, $storeId);
         if ($value === '') {
             return [];
         }
@@ -114,9 +114,9 @@ class Data extends AbstractHelper
         return array_values(array_filter(array_map('intval', explode(',', $value)), static fn($id) => $id > 0));
     }
 
-    public function isSkipDuplicatesEnabled(): bool
+    public function isSkipDuplicatesEnabled(?int $storeId = null): bool
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_CRON . 'skip_duplicates', ScopeInterface::SCOPE_DEFAULT);
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_CRON . 'skip_duplicates', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     public function getTargetStoreViews(): array

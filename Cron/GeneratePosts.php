@@ -69,7 +69,7 @@ class GeneratePosts
                     ];
                 }
 
-                if ($this->helper->isSkipDuplicatesEnabled() && $this->isDuplicatePayload($payload, $storeId)) {
+                if ($this->helper->isSkipDuplicatesEnabled($storeId) && $this->isDuplicatePayload($payload, $storeId)) {
                     $this->historyRepository->create([
                         'topic' => (string) ($payload['topic'] ?? ''),
                         'status' => 'cron_skipped_duplicate',
@@ -90,11 +90,11 @@ class GeneratePosts
                 try {
                     $generated = $this->blogGenerator->generate($payload);
                     $postId = $this->postManager->saveGeneratedPost($generated, [
-                        'author_id' => $this->helper->getCronAuthorId(),
+                        'author_id' => $this->helper->getCronAuthorId($storeId),
                         'store_id' => $storeId,
                         'store_ids' => [$storeId],
                         'product_id' => $payload['product_id'] ?? null,
-                        'blog_category_ids' => $this->helper->getCronBlogCategoryIds(),
+                        'blog_category_ids' => $this->helper->getCronBlogCategoryIds($storeId),
                         'auto_publish' => (int) $this->helper->isAutoPublish($storeId),
                     ]);
 
@@ -169,13 +169,14 @@ class GeneratePosts
             foreach ($collection as $product) {
                 $queue[] = [
                     'topic' => $this->renderTopicTemplate(
+                        $storeId,
                         (string) $product->getName(),
                         '',
                         (string) $this->storeManager->getStore($storeId)->getName(),
                         (string) __('Why %1 is worth attention', $product->getName())
                     ),
                     'keywords' => (string) $product->getName(),
-                    'tone' => $this->resolveTone('professional'),
+                    'tone' => $this->resolveTone($storeId, 'professional'),
                     'word_count' => $this->helper->getDefaultWordCount($storeId),
                     'store_id' => $storeId,
                     'product_id' => (int) $product->getId(),
@@ -187,55 +188,58 @@ class GeneratePosts
             return $queue;
         }
 
-        if ($topicSource === 'category_pages' && $this->helper->getTargetCategoryId()) {
-            $category = $this->categoryFactory->create()->load($this->helper->getTargetCategoryId());
+        if ($topicSource === 'category_pages' && $this->helper->getTargetCategoryId($storeId)) {
+            $category = $this->categoryFactory->create()->load($this->helper->getTargetCategoryId($storeId));
             $categoryName = (string) $category->getName();
 
             return [[
                 'topic' => $this->renderTopicTemplate(
+                    $storeId,
                     '',
                     $categoryName,
                     (string) $this->storeManager->getStore($storeId)->getName(),
                     'Category buying guide'
                 ),
                 'keywords' => $categoryName !== '' ? $categoryName . ', category guide' : 'category guide',
-                'tone' => $this->resolveTone('expert'),
+                'tone' => $this->resolveTone($storeId, 'expert'),
                 'word_count' => $this->helper->getDefaultWordCount($storeId),
                 'store_id' => $storeId,
-                'category_id' => $this->helper->getTargetCategoryId(),
+                'category_id' => $this->helper->getTargetCategoryId($storeId),
                 'model' => $this->helper->getDefaultModel($storeId),
             ]];
         }
 
         return [[
             'topic' => $this->renderTopicTemplate(
+                $storeId,
                 '',
                 '',
                 (string) $this->storeManager->getStore($storeId)->getName(),
                 'Seasonal ecommerce trends'
             ),
             'keywords' => 'ecommerce trends, buying guide',
-            'tone' => $this->resolveTone('professional'),
+            'tone' => $this->resolveTone($storeId, 'professional'),
             'word_count' => $this->helper->getDefaultWordCount($storeId),
             'store_id' => $storeId,
             'model' => $this->helper->getDefaultModel($storeId),
         ]];
     }
 
-    private function resolveTone(string $default): string
+    private function resolveTone(int $storeId, string $default): string
     {
-        $tone = trim($this->helper->getCronTone());
+        $tone = trim($this->helper->getCronTone($storeId));
 
         return $tone !== '' ? $tone : $default;
     }
 
     private function renderTopicTemplate(
+        int $storeId,
         string $productName,
         string $categoryName,
         string $storeName,
         string $fallback
     ): string {
-        $template = $this->helper->getCronTopicTemplate();
+        $template = $this->helper->getCronTopicTemplate($storeId);
         if ($template === '') {
             return $fallback;
         }

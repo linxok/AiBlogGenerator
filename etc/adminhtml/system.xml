@@ -4,44 +4,44 @@
         <tab id="mycompany" translate="label" sortOrder="300">
             <label>MyCompany</label>
         </tab>
-        <section id="aibloggenerator" translate="label" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="0">
+        <section id="aibloggenerator" translate="label" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>AI Blog Generator</label>
             <tab>mycompany</tab>
             <resource>MyCompany_AiBlogGenerator::config</resource>
-            <group id="general" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+            <group id="general" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General Settings</label>
-                <field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
-                <field id="openrouter_api_key" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="openrouter_api_key" translate="label" type="obscure" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>OpenRouter API Key</label>
                     <comment><![CDATA[Create an API key in your OpenRouter account: <a href="https://openrouter.ai/keys" target="_blank">https://openrouter.ai/keys</a>]]></comment>
                     <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
                 </field>
-                <field id="default_model" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="default_model" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Default Model</label>
                     <frontend_model>MyCompany\AiBlogGenerator\Block\Adminhtml\System\Config\Form\Field\SearchableModelSelect</frontend_model>
                     <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\ModelList</source_model>
                 </field>
-                <field id="temperature" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="temperature" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Temperature</label>
                     <validate>validate-number validate-number-range number-range-0.0-2.0</validate>
                 </field>
-                <field id="max_tokens" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="max_tokens" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Max Tokens</label>
                     <validate>required-entry validate-number validate-digits validate-greater-than-zero</validate>
                 </field>
-                <field id="default_word_count" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="default_word_count" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Default Word Count</label>
                     <validate>required-entry validate-number validate-digits validate-greater-than-zero</validate>
                 </field>
-                <field id="auto_publish" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
+                <field id="auto_publish" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Auto Publish Generated Posts</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
-            <group id="cron" translate="label" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+            <group id="cron" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Cron Automatic Generation</label>
                 <field id="cron_enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Enable Cron</label>
@@ -68,41 +68,48 @@
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="target_category_id" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="target_category_id" translate="label" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Target Magento Category</label>
                     <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\CategoryList</source_model>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="tone" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="tone" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Default Tone</label>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="topic_template" translate="label" type="textarea" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="topic_template" translate="label" type="textarea" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Topic Template</label>
-                    <comment>Use placeholders: {{product_name}}, {{category_name}}, {{store_name}}</comment>
+                    <comment><![CDATA[
+Use placeholders: {{product_name}}, {{category_name}}, {{store_name}}.<br/>
+Examples:<br/>
+1. Top reasons to choose {{product_name}}<br/>
+2. How to choose {{category_name}} for {{store_name}}<br/>
+3. {{product_name}} buying guide for {{store_name}}<br/>
+If the template resolves to an empty value, the module will use its default topic.
+                    ]]></comment>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="author_id" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="author_id" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Blog Author</label>
                     <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\BlogAuthorList</source_model>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="blog_category_ids" translate="label" type="multiselect" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="blog_category_ids" translate="label" type="multiselect" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Blog Categories</label>
                     <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\BlogCategoryList</source_model>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="skip_duplicates" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="skip_duplicates" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Skip Duplicates</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
