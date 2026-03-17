@@ -75,11 +75,6 @@ class Data extends AbstractHelper
         return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'cron_frequency', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
     }
 
-    public function getPostsPerRun(): int
-    {
-        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'posts_per_run', ScopeConfigInterface::SCOPE_TYPE_DEFAULT));
-    }
-
     public function getTopicSource(): string
     {
         return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);

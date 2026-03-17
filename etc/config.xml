@@ -13,7 +13,6 @@
             <cron>
                 <cron_enabled>0</cron_enabled>
                 <cron_frequency>daily</cron_frequency>
-                <posts_per_run>1</posts_per_run>
                 <topic_source>manual</topic_source>
                 <target_category_ids></target_category_ids>
                 <tone>professional</tone>
