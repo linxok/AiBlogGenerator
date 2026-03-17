@@ -168,13 +168,7 @@ class GeneratePosts
 
             foreach ($collection as $product) {
                 $queue[] = [
-                    'topic' => $this->renderTopicTemplate(
-                        $storeId,
-                        (string) $product->getName(),
-                        '',
-                        (string) $this->storeManager->getStore($storeId)->getName(),
-                        (string) __('Why %1 is worth attention', $product->getName())
-                    ),
+                    'topic' => (string) __('Why %1 is worth attention', $product->getName()),
                     'keywords' => (string) $product->getName(),
                     'tone' => $this->resolveTone($storeId, 'professional'),
                     'word_count' => $this->helper->getDefaultWordCount($storeId),
@@ -188,35 +182,25 @@ class GeneratePosts
             return $queue;
         }
 
-        if ($topicSource === 'category_pages' && $this->helper->getTargetCategoryId($storeId)) {
-            $category = $this->categoryFactory->create()->load($this->helper->getTargetCategoryId($storeId));
+        $targetCategoryIds = $this->helper->getTargetCategoryIds($storeId);
+        if ($topicSource === 'category_pages' && $targetCategoryIds !== []) {
+            $selectedCategoryId = $targetCategoryIds[array_rand($targetCategoryIds)];
+            $category = $this->categoryFactory->create()->load($selectedCategoryId);
             $categoryName = (string) $category->getName();
 
             return [[
-                'topic' => $this->renderTopicTemplate(
-                    $storeId,
-                    '',
-                    $categoryName,
-                    (string) $this->storeManager->getStore($storeId)->getName(),
-                    'Category buying guide'
-                ),
+                'topic' => $categoryName !== '' ? (string) __('How to choose %1', $categoryName) : 'Category buying guide',
                 'keywords' => $categoryName !== '' ? $categoryName . ', category guide' : 'category guide',
                 'tone' => $this->resolveTone($storeId, 'expert'),
                 'word_count' => $this->helper->getDefaultWordCount($storeId),
                 'store_id' => $storeId,
-                'category_id' => $this->helper->getTargetCategoryId($storeId),
+                'category_id' => (int) $selectedCategoryId,
                 'model' => $this->helper->getDefaultModel($storeId),
             ]];
         }
 
         return [[
-            'topic' => $this->renderTopicTemplate(
-                $storeId,
-                '',
-                '',
-                (string) $this->storeManager->getStore($storeId)->getName(),
-                'Seasonal ecommerce trends'
-            ),
+            'topic' => 'Seasonal ecommerce trends',
             'keywords' => 'ecommerce trends, buying guide',
             'tone' => $this->resolveTone($storeId, 'professional'),
             'word_count' => $this->helper->getDefaultWordCount($storeId),
@@ -230,29 +214,6 @@ class GeneratePosts
         $tone = trim($this->helper->getCronTone($storeId));
 
         return $tone !== '' ? $tone : $default;
-    }
-
-    private function renderTopicTemplate(
-        int $storeId,
-        string $productName,
-        string $categoryName,
-        string $storeName,
-        string $fallback
-    ): string {
-        $template = $this->helper->getCronTopicTemplate($storeId);
-        if ($template === '') {
-            return $fallback;
-        }
-
-        $resolved = strtr($template, [
-            '{{product_name}}' => $productName,
-            '{{category_name}}' => $categoryName,
-            '{{store_name}}' => $storeName,
-        ]);
-
-        $resolved = trim(preg_replace('/\s+/', ' ', $resolved) ?? '');
-
-        return $resolved !== '' ? $resolved : $fallback;
     }
 
     private function isDuplicatePayload(array $payload, int $storeId): bool

@@ -23,7 +23,7 @@ class Run extends AbstractGenerate
         $resultRedirect = $this->redirectFactory->create();
 
         try {
-            $result = $this->generatePosts->run();
+            $result = $this->generatePosts->run(true);
             $message = (string) ($result['message'] ?? __('Generation completed.'));
             $errors = (int) ($result['errors'] ?? 0);
 

@@ -85,19 +85,19 @@ class Data extends AbstractHelper
         return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
     }
 
-    public function getTargetCategoryId(?int $storeId = null): int
+    public function getTargetCategoryIds(?int $storeId = null): array
     {
-        return (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_category_id', ScopeInterface::SCOPE_STORE, $storeId);
+        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_category_ids', ScopeInterface::SCOPE_STORE, $storeId);
+        if ($value === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('intval', explode(',', $value)), static fn($id) => $id > 0));
     }
 
     public function getCronTone(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'tone', ScopeInterface::SCOPE_STORE, $storeId);
-    }
-
-    public function getCronTopicTemplate(?int $storeId = null): string
-    {
-        return trim((string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_template', ScopeInterface::SCOPE_STORE, $storeId));
     }
 
     public function getCronAuthorId(?int $storeId = null): int
