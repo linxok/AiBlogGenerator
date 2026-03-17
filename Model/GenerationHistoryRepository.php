@@ -3,6 +3,7 @@
 namespace MyCompany\AiBlogGenerator\Model;
 
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use MyCompany\AiBlogGenerator\Model\ResourceModel\GenerationHistory as GenerationHistoryResource;
 
@@ -47,5 +48,17 @@ class GenerationHistoryRepository
             'preview_html' => (string) ($responsePayload['content_html'] ?? ''),
             'is_published' => 0,
         ]);
+    }
+
+    public function deleteById(int $id): void
+    {
+        $model = $this->historyFactory->create();
+        $this->resource->load($model, $id);
+
+        if (!$model->getId()) {
+            throw new NoSuchEntityException(__('Generation history record does not exist.'));
+        }
+
+        $this->resource->delete($model);
     }
 }

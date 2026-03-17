@@ -34,5 +34,11 @@
         <column name="store_id"><settings><filter>textRange</filter><label>Store View</label></settings></column>
         <column name="post_id"><settings><filter>textRange</filter><label>Post ID</label></settings></column>
         <column name="generated_at" class="Magento\Ui\Component\Listing\Columns\Date"><settings><filter>dateRange</filter><label>Generated At</label></settings></column>
+        <actionsColumn name="actions" class="MyCompany\AiBlogGenerator\Ui\Component\Listing\Column\HistoryActions">
+            <settings>
+                <indexField>entity_id</indexField>
+                <label>Actions</label>
+            </settings>
+        </actionsColumn>
     </columns>
 </listing>
