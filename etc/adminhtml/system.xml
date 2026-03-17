@@ -75,9 +75,50 @@
                         <field id="cron_enabled">1</field>
                     </depends>
                 </field>
-                <field id="target_store_views" translate="label" type="multiselect" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="tone" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Default Tone</label>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="topic_template" translate="label" type="textarea" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Topic Template</label>
+                    <comment>Use placeholders: {{product_name}}, {{category_name}}, {{store_name}}</comment>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="author_id" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Blog Author</label>
+                    <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\BlogAuthorList</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="blog_category_ids" translate="label" type="multiselect" sortOrder="90" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Blog Categories</label>
+                    <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\BlogCategoryList</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="skip_duplicates" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Skip Duplicates</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="target_store_views" translate="label" type="multiselect" sortOrder="110" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Target Store Views</label>
                     <source_model>MyCompany\AiBlogGenerator\Model\Config\Source\StoreViews</source_model>
+                    <depends>
+                        <field id="cron_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="run_now" translate="label" type="label" sortOrder="120" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Manual Run</label>
+                    <frontend_model>MyCompany\AiBlogGenerator\Block\Adminhtml\System\Config\Form\Field\RunCronButton</frontend_model>
                     <depends>
                         <field id="cron_enabled">1</field>
                     </depends>

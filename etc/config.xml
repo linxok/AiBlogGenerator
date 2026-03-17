@@ -16,6 +16,11 @@
                 <posts_per_run>1</posts_per_run>
                 <topic_source>manual</topic_source>
                 <target_category_id>0</target_category_id>
+                <tone>professional</tone>
+                <topic_template></topic_template>
+                <author_id>1</author_id>
+                <blog_category_ids></blog_category_ids>
+                <skip_duplicates>1</skip_duplicates>
                 <target_store_views>0</target_store_views>
             </cron>
         </aibloggenerator>

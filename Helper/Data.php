@@ -13,8 +13,9 @@ class Data extends AbstractHelper
 
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
-        private readonly EncryptorInterface $encryptor
-    ) {
+        private readonly EncryptorInterface   $encryptor
+    )
+    {
         parent::__construct($context);
     }
 
@@ -25,7 +26,7 @@ class Data extends AbstractHelper
 
     public function getApiKey(?int $storeId = null): string
     {
-        $value = (string) $this->scopeConfig->getValue(
+        $value = (string)$this->scopeConfig->getValue(
             self::XML_PATH_GENERAL . 'openrouter_api_key',
             ScopeInterface::SCOPE_STORE,
             $storeId
@@ -35,27 +36,27 @@ class Data extends AbstractHelper
             return '';
         }
 
-        return trim((string) $this->encryptor->decrypt($value));
+        return trim((string)$this->encryptor->decrypt($value));
     }
 
     public function getDefaultModel(?int $storeId = null): string
     {
-        return (string) $this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'default_model', ScopeInterface::SCOPE_STORE, $storeId);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'default_model', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     public function getTemperature(?int $storeId = null): float
     {
-        return (float) $this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'temperature', ScopeInterface::SCOPE_STORE, $storeId);
+        return (float)$this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'temperature', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     public function getMaxTokens(?int $storeId = null): int
     {
-        return (int) $this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'max_tokens', ScopeInterface::SCOPE_STORE, $storeId);
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'max_tokens', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     public function getDefaultWordCount(?int $storeId = null): int
     {
-        return (int) $this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'default_word_count', ScopeInterface::SCOPE_STORE, $storeId);
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_GENERAL . 'default_word_count', ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     public function isAutoPublish(?int $storeId = null): bool
@@ -70,31 +71,61 @@ class Data extends AbstractHelper
 
     public function getCronFrequency(): string
     {
-        return (string) $this->scopeConfig->getValue(self::XML_PATH_CRON . 'cron_frequency', ScopeInterface::SCOPE_DEFAULT);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'cron_frequency', ScopeInterface::SCOPE_DEFAULT);
     }
 
     public function getPostsPerRun(): int
     {
-        return max(1, (int) $this->scopeConfig->getValue(self::XML_PATH_CRON . 'posts_per_run', ScopeInterface::SCOPE_DEFAULT));
+        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'posts_per_run', ScopeInterface::SCOPE_DEFAULT));
     }
 
     public function getTopicSource(): string
     {
-        return (string) $this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeInterface::SCOPE_DEFAULT);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_source', ScopeInterface::SCOPE_DEFAULT);
     }
 
     public function getTargetCategoryId(): int
     {
-        return (int) $this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_category_id', ScopeInterface::SCOPE_DEFAULT);
+        return (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_category_id', ScopeInterface::SCOPE_DEFAULT);
     }
 
-    public function getTargetStoreViews(): array
+    public function getCronTone(): string
     {
-        $value = (string) $this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_store_views', ScopeInterface::SCOPE_DEFAULT);
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'tone', ScopeInterface::SCOPE_DEFAULT);
+    }
+
+    public function getCronTopicTemplate(): string
+    {
+        return trim((string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'topic_template', ScopeInterface::SCOPE_DEFAULT));
+    }
+
+    public function getCronAuthorId(): int
+    {
+        return max(1, (int)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'author_id', ScopeInterface::SCOPE_DEFAULT));
+    }
+
+    public function getCronBlogCategoryIds(): array
+    {
+        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'blog_category_ids', ScopeInterface::SCOPE_DEFAULT);
         if ($value === '') {
             return [];
         }
 
-        return array_values(array_filter(array_map('intval', explode(',', $value)), static fn ($id) => $id >= 0));
+        return array_values(array_filter(array_map('intval', explode(',', $value)), static fn($id) => $id > 0));
+    }
+
+    public function isSkipDuplicatesEnabled(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_CRON . 'skip_duplicates', ScopeInterface::SCOPE_DEFAULT);
+    }
+
+    public function getTargetStoreViews(): array
+    {
+        $value = (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'target_store_views', ScopeInterface::SCOPE_DEFAULT);
+        if ($value === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('intval', explode(',', $value)), static fn($id) => $id >= 0));
     }
 }
