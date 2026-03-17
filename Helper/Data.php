@@ -90,6 +90,15 @@ class Data extends AbstractHelper
         return array_values(array_filter(array_map('intval', explode(',', $value)), static fn($id) => $id > 0));
     }
 
+    public function getPrimaryTargetCategoryId(?int $storeId = null): int
+    {
+        return max(0, (int)$this->scopeConfig->getValue(
+            self::XML_PATH_CRON . 'primary_target_category_id',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        ));
+    }
+
     public function getCronTone(?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue(self::XML_PATH_CRON . 'tone', ScopeInterface::SCOPE_STORE, $storeId);

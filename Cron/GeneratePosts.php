@@ -178,9 +178,21 @@ class GeneratePosts
         }
 
         $targetCategoryIds = $this->helper->getTargetCategoryIds($storeId);
-        if ($topicSource === 'category_pages' && $targetCategoryIds !== []) {
-            $selectedCategoryId = $targetCategoryIds[array_rand($targetCategoryIds)];
+        $primaryCategoryId = $this->helper->getPrimaryTargetCategoryId($storeId);
+        if ($topicSource === 'category_pages') {
+            $selectedCategoryId = $primaryCategoryId > 0
+                ? $primaryCategoryId
+                : ($targetCategoryIds !== [] ? $targetCategoryIds[array_rand($targetCategoryIds)] : 0);
+
+            if ($selectedCategoryId <= 0) {
+                return null;
+            }
+
             $category = $this->categoryFactory->create()->load($selectedCategoryId);
+            if (!$category->getId()) {
+                return null;
+            }
+
             $categoryName = (string) $category->getName();
 
             return [
