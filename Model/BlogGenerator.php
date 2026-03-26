@@ -64,7 +64,7 @@ class BlogGenerator
 
     private function buildSystemPrompt(): string
     {
-        return 'You are a Senior SEO content strategist. Create long-form SEO blog content for Magento ecommerce websites. Use structured headings, semantic HTML, keyword variations, FAQ, internal linking suggestions, and conversion-aware copywriting. Return only valid JSON with keys: title, meta_title, meta_description, url_key, short_description, content_html, faq, tags, schema_markup.';
+        return 'You are a Senior SEO content strategist. Create long-form SEO blog content for Magento ecommerce websites. Use structured headings, semantic HTML, keyword variations, FAQ, internal linking suggestions, and conversion-aware copywriting. Return only valid JSON with keys: title, meta_title, meta_description, url_key, short_description, content_html, faq, tags, schema_markup. Do not include markdown fences, comments, placeholders, ellipses, or any explanatory text.';
     }
 
     private function buildUserPrompt(array $payload, string $language, string $locale, int $wordCount, array $context): string
@@ -139,6 +139,15 @@ class BlogGenerator
         $message = is_array($choice['message'] ?? null) ? $choice['message'] : [];
         $content = $message['content'] ?? ($choice['text'] ?? ($response['output_text'] ?? ''));
 
+        if ($this->isEmptyContent($content)) {
+            $content = $this->firstNonEmptyString([
+                $message['reasoning'] ?? null,
+                $message['refusal'] ?? null,
+                $choice['text'] ?? null,
+                $response['output_text'] ?? null,
+            ]);
+        }
+
         if (is_string($content)) {
             return trim($content);
         }
@@ -171,6 +180,45 @@ class BlogGenerator
             }
 
             return $content;
+        }
+
+        return '';
+    }
+
+    private function isEmptyContent(mixed $content): bool
+    {
+        if (is_string($content)) {
+            return trim($content) === '';
+        }
+
+        if (is_array($content)) {
+            return $this->firstNonEmptyString($content) === '';
+        }
+
+        return $content === null;
+    }
+
+    private function firstNonEmptyString(array $values): string
+    {
+        foreach ($values as $value) {
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed !== '') {
+                    return $trimmed;
+                }
+                continue;
+            }
+
+            if (is_array($value)) {
+                foreach ($value as $part) {
+                    if (is_string($part)) {
+                        $trimmed = trim($part);
+                        if ($trimmed !== '') {
+                            return $trimmed;
+                        }
+                    }
+                }
+            }
         }
 
         return '';
@@ -304,8 +352,9 @@ class BlogGenerator
 
     private function sanitizeJsonContent(string $content): string
     {
+        $content = $this->stripJsonComments($content);
         $sanitized = preg_replace_callback(
-            '/"((?:\\\\.|[^"\\\\])*)"/s',
+            '/"((?:\\.|[^"\\])*)"/s',
             static function (array $matches): string {
                 $value = $matches[1] ?? '';
                 $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? $value;
@@ -325,6 +374,63 @@ class BlogGenerator
         }
 
         return $sanitized;
+    }
+
+    private function stripJsonComments(string $content): string
+    {
+        $length = strlen($content);
+        $result = '';
+        $inString = false;
+        $escaped = false;
+
+        for ($index = 0; $index < $length; $index++) {
+            $char = $content[$index];
+            $next = $index + 1 < $length ? $content[$index + 1] : '';
+
+            if ($escaped) {
+                $result .= $char;
+                $escaped = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $result .= $char;
+                if ($inString) {
+                    $escaped = true;
+                }
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = !$inString;
+                $result .= $char;
+                continue;
+            }
+
+            if (!$inString && $char === '/' && $next === '/') {
+                while ($index < $length && $content[$index] !== "\n") {
+                    $index++;
+                }
+
+                $result .= "\n";
+                continue;
+            }
+
+            if (!$inString && $char === '/' && $next === '*') {
+                $index += 2;
+                while ($index + 1 < $length && !($content[$index] === '*' && $content[$index + 1] === '/')) {
+                    $index++;
+                }
+                $index++;
+                continue;
+            }
+
+            $result .= $char;
+        }
+
+        $result = preg_replace('/,\s*([}\]])/', '$1', $result) ?? $result;
+
+        return $result;
     }
 
     private function extractJsonObject(string $content): ?string
