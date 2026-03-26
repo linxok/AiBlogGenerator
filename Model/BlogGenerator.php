@@ -49,26 +49,16 @@ class BlogGenerator
             ],
         ];
 
+        $maxTokens = isset($payload['max_tokens']) ? (int) $payload['max_tokens'] : null;
         $response = $this->openRouterClient->chat(
             $messages,
             $resolvedModel,
             isset($payload['temperature']) ? (float) $payload['temperature'] : null,
-            isset($payload['max_tokens']) ? (int) $payload['max_tokens'] : null,
+            $maxTokens,
             $storeId
         );
 
-        $content = $this->extractResponseContent($response);
-        if ($content === '') {
-            $this->logger->error('OpenRouter returned empty content', [
-                'top_level_keys' => array_keys($response),
-                'has_choices' => isset($response['choices']) && is_array($response['choices']),
-                'first_choice_keys' => isset($response['choices'][0]) && is_array($response['choices'][0]) ? array_keys($response['choices'][0]) : [],
-                'message_keys' => isset($response['choices'][0]['message']) && is_array($response['choices'][0]['message']) ? array_keys($response['choices'][0]['message']) : [],
-            ]);
-            throw new LocalizedException(__('The AI response was empty.'));
-        }
-
-        $decoded = is_array($content) ? $content : $this->decodeJsonContent($content);
+        $decoded = $this->decodeResponse($response, $messages, $resolvedModel, $storeId, $payload, $maxTokens);
         return $this->normalizeOutput($decoded, $payload, $language, $wordCount, $resolvedModel);
     }
 
@@ -247,6 +237,69 @@ class BlogGenerator
             ]);
             throw new LocalizedException(__('The AI response was not valid JSON.'));
         }
+    }
+
+    private function decodeResponse(array $response, array $messages, string $resolvedModel, int $storeId, array $payload, ?int $maxTokens): array
+    {
+        $content = $this->extractResponseContent($response);
+        if ($content === '') {
+            $this->logger->error('OpenRouter returned empty content', [
+                'top_level_keys' => array_keys($response),
+                'has_choices' => isset($response['choices']) && is_array($response['choices']),
+                'first_choice_keys' => isset($response['choices'][0]) && is_array($response['choices'][0]) ? array_keys($response['choices'][0]) : [],
+                'message_keys' => isset($response['choices'][0]['message']) && is_array($response['choices'][0]['message']) ? array_keys($response['choices'][0]['message']) : [],
+            ]);
+            throw new LocalizedException(__('The AI response was empty.'));
+        }
+
+        if (is_array($content)) {
+            return $content;
+        }
+
+        try {
+            return $this->decodeJsonContent($content);
+        } catch (LocalizedException $exception) {
+            if (str_contains($exception->getMessage(), 'truncated') && !$this->isRetryMaxTokens($maxTokens)) {
+                $retryMaxTokens = $this->calculateRetryMaxTokens($maxTokens);
+                $this->logger->warning('Retrying AI generation with a larger token budget after truncated JSON response', [
+                    'model' => $resolvedModel,
+                    'previous_max_tokens' => $maxTokens,
+                    'retry_max_tokens' => $retryMaxTokens,
+                ]);
+
+                $retryResponse = $this->openRouterClient->chat(
+                    $messages,
+                    $resolvedModel,
+                    isset($payload['temperature']) ? (float) $payload['temperature'] : null,
+                    $retryMaxTokens,
+                    $storeId
+                );
+
+                $retryContent = $this->extractResponseContent($retryResponse);
+                if ($retryContent === '') {
+                    throw $exception;
+                }
+
+                if (is_array($retryContent)) {
+                    return $retryContent;
+                }
+
+                return $this->decodeJsonContent($retryContent);
+            }
+
+            throw $exception;
+        }
+    }
+
+    private function calculateRetryMaxTokens(?int $maxTokens): int
+    {
+        $baseline = $maxTokens ?? $this->helper->getMaxTokens();
+        return max(4000, (int) ceil($baseline * 1.5));
+    }
+
+    private function isRetryMaxTokens(?int $maxTokens): bool
+    {
+        return is_int($maxTokens) && $maxTokens >= 8000;
     }
 
     private function sanitizeJsonContent(string $content): string
