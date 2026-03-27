@@ -12,6 +12,8 @@ class OpenRouterClient
 {
     private const MODELS_URL = 'https://openrouter.ai/api/v1/models';
     private const CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
+    private const CHAT_RETRY_ATTEMPTS = 3;
+    private const CHAT_RETRY_BASE_DELAY_MS = 500;
 
     public function __construct(
         private readonly Curl $curl,
@@ -58,27 +60,54 @@ class OpenRouterClient
             'response_format' => ['type' => 'json_object'],
         ];
 
-        $start = microtime(true);
-        $this->curl->setHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ]);
-        $this->curl->post(self::CHAT_URL, $this->json->serialize($payload));
-        $status = (int) $this->curl->getStatus();
-        $body = (string) $this->curl->getBody();
+        $attempt = 0;
+        $lastBody = '';
 
-        $this->logger->info('OpenRouter chat request', [
-            'model' => $payload['model'],
-            'status' => $status,
-            'duration' => microtime(true) - $start,
-        ]);
+        while ($attempt < self::CHAT_RETRY_ATTEMPTS) {
+            $attempt++;
+            $start = microtime(true);
+            $this->curl->setHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ]);
+            $this->curl->post(self::CHAT_URL, $this->json->serialize($payload));
+            $status = (int) $this->curl->getStatus();
+            $body = (string) $this->curl->getBody();
+            $lastBody = $body;
 
-        if ($status >= 400) {
-            $this->logger->error('OpenRouter chat error', ['status' => $status, 'body' => $body]);
-            throw new LocalizedException(__('OpenRouter request failed.'));
+            $this->logger->info('OpenRouter chat request', [
+                'model' => $payload['model'],
+                'status' => $status,
+                'attempt' => $attempt,
+                'duration' => microtime(true) - $start,
+            ]);
+
+            if ($status < 400) {
+                return $this->json->unserialize($body);
+            }
+
+            if ($status !== 429 || $attempt >= self::CHAT_RETRY_ATTEMPTS) {
+                break;
+            }
+
+            $delayMs = self::CHAT_RETRY_BASE_DELAY_MS * (2 ** ($attempt - 1));
+            $this->logger->warning('OpenRouter rate limited, retrying request', [
+                'model' => $payload['model'],
+                'attempt' => $attempt,
+                'delay_ms' => $delayMs,
+            ]);
+            usleep($delayMs * 1000);
         }
 
-        return $this->json->unserialize($body);
+        $this->logger->error('OpenRouter chat error', ['status' => $status ?? null, 'body' => $lastBody]);
+
+        if (isset($status) && $status === 429) {
+            throw new LocalizedException(__(
+                'OpenRouter rate limited the selected model. Please retry later or use a non-free model / BYOK key to increase limits.'
+            ));
+        }
+
+        throw new LocalizedException(__('OpenRouter request failed.'));
     }
 }

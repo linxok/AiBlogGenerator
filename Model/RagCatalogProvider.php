@@ -8,6 +8,7 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductColl
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Store\Model\StoreManagerInterface;
 use MyCompany\AiBlogGenerator\Model\Cache\Type as CacheType;
 
 class RagCatalogProvider
@@ -18,6 +19,7 @@ class RagCatalogProvider
         private readonly ProductRepositoryInterface $productRepository,
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly ProductCollectionFactory $productCollectionFactory,
+        private readonly StoreManagerInterface $storeManager,
         private readonly CacheInterface $cache,
         private readonly Json $json
     ) {
@@ -136,13 +138,35 @@ class RagCatalogProvider
             'id' => $category->getId(),
             'name' => (string) $category->getName(),
             'description' => (string) $category->getDescription(),
-            'url' => (string) $category->getUrl(),
+            'url' => $this->buildCategoryUrl($categoryId, $storeId),
             'top_products' => $topProducts,
         ];
 
         $this->cache->save($this->json->serialize($context), $cacheKey, [CacheType::CACHE_TAG], self::CACHE_LIFETIME);
 
         return $context;
+    }
+
+    private function buildCategoryUrl(int $categoryId, int $storeId): string
+    {
+        try {
+            $store = $this->storeManager->getStore($storeId);
+            $category = $this->categoryRepository->get($categoryId, $storeId);
+            $category->setStoreId($storeId);
+
+            $urlPath = trim((string) $category->getUrlPath(), '/');
+            if ($urlPath !== '') {
+                return rtrim($store->getBaseUrl(), '/') . '/' . $urlPath;
+            }
+
+            $requestPath = trim((string) $category->getRequestPath(), '/');
+            if ($requestPath !== '') {
+                return rtrim($store->getBaseUrl(), '/') . '/' . $requestPath;
+            }
+        } catch (NoSuchEntityException) {
+        }
+
+        return '';
     }
 
     public function resolveProductName(int $productId, int $storeId): ?string
