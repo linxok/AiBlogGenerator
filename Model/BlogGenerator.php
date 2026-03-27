@@ -238,6 +238,14 @@ class BlogGenerator
             $normalized = $extractedJson;
         }
 
+        if ($this->looksLikePlaceholderJson($normalized)) {
+            $this->logger->error('AI JSON response contains placeholder fragments', [
+                'preview' => substr($normalized, 0, 500),
+            ]);
+
+            throw new LocalizedException(__('The AI response appears truncated. Increase Max Tokens or use a model that returns strict JSON reliably.'));
+        }
+
         try {
             $decoded = $this->json->unserialize($normalized);
             return is_array($decoded) ? $decoded : [];
@@ -247,6 +255,15 @@ class BlogGenerator
             $sanitizedExtractedJson = $this->extractJsonObject($sanitized);
             if ($sanitizedExtractedJson !== null) {
                 $sanitized = $sanitizedExtractedJson;
+            }
+
+            if ($this->looksLikePlaceholderJson($sanitized) || $this->looksLikePlaceholderJson($normalized)) {
+                $this->logger->error('AI JSON response contains placeholder fragments after sanitization', [
+                    'preview' => substr($normalized, 0, 500),
+                    'sanitized_preview' => substr($sanitized, 0, 500),
+                ]);
+
+                throw new LocalizedException(__('The AI response appears truncated. Increase Max Tokens or use a model that returns strict JSON reliably.'));
             }
 
             if ($sanitized !== $normalized) {
@@ -352,9 +369,10 @@ class BlogGenerator
 
     private function sanitizeJsonContent(string $content): string
     {
+        $content = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $content) ?? $content;
         $content = $this->stripJsonComments($content);
         $sanitized = preg_replace_callback(
-            '/"((?:\\.|[^"\\])*)"/s',
+            '/"((?:\\\\.|[^"\\\\])*)"/s',
             static function (array $matches): string {
                 $value = $matches[1] ?? '';
                 $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? $value;
@@ -528,5 +546,18 @@ class BlogGenerator
         }
 
         return $depth > 0 || $inString;
+    }
+
+    private function looksLikePlaceholderJson(string $content): bool
+    {
+        $trimmed = trim($content);
+        if ($trimmed === '') {
+            return false;
+        }
+
+        return (bool) preg_match('/\{[^{}]*\.\.\.[^{}]*\}/s', $trimmed)
+            || str_contains($trimmed, '...')
+            || str_contains($trimmed, '{ ...')
+            || str_contains($trimmed, '... }');
     }
 }
