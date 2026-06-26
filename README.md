@@ -1,4 +1,4 @@
-# MyCompany_AiBlogGenerator
+# AI Content Generator Module for Magento
 
 Magento 2 module for AI-powered blog generation for Mageplaza Blog using OpenRouter.
 
